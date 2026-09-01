@@ -1,39 +1,29 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include <vector>
-#include <stdexcept>
 #include "lexer.h"
 #include "ast.h"
+#include <vector>
+#include <stdexcept>
 
 class Parser {
+public:
+    Parser(const std::vector<Token>& tokens);
+    std::unique_ptr<BlockNode> parseProgram();
+
 private:
     std::vector<Token> tokens;
-    int current = 0;
+    size_t pos;
+    Token currentToken;
 
-    ASTNode* statement();
-    ASTNode* declaration();
-    ASTNode* printStatement();
-    ASTNode* ifStatement();
-    ASTNode* whileStatement();
-    ASTNode* expression();
-    ASTNode* equality();
-    ASTNode* comparison();
-    ASTNode* term();
-    ASTNode* factor();
-    ASTNode* unary();
-    ASTNode* primary();
+    void advance();
+    void match(TokenType type);
+    void synchronize(); 
 
-    bool match(std::initializer_list<TokenType> types);
-    bool check(TokenType type);
-    Token advance();
-    bool isAtEnd();
-    Token peek();
-    Token previous();
-    Token consume(TokenType type, std::string message);
-    void synchronize();
-
-public:
-    Parser(std::vector<Token> tokens);
-    std::vector<ASTNode*> parse();
+    std::unique_ptr<StmtNode> parseStatement();
+    std::unique_ptr<BlockNode> parseBlock();
+    std::unique_ptr<ExprNode> parseExpression();
+    std::unique_ptr<ExprNode> parseComparison();
+    std::unique_ptr<ExprNode> parseTerm();
+    std::unique_ptr<ExprNode> parseFactor();
 };
 #endif

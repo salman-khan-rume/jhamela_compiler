@@ -1,4 +1,4 @@
-# Jhamela Compiler - Confirmed Decisions
+# Jhamela Compiler
 
 * **Implementation Language:** C++
 * **Target Output:** Python

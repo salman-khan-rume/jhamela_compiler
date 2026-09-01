@@ -2,123 +2,133 @@
 #define AST_H
 #include <string>
 #include <vector>
+#include <memory>
 #include <iostream>
-
-enum class VarType { INT, BOOL, STRING };
 
 class ASTNode {
 public:
     virtual ~ASTNode() = default;
-    virtual void print(int indent = 0) const = 0;
+    virtual void print(std::string prefix = "", bool isLast = true) const = 0;
 };
 
-inline void printIndent(int indent) {
-    for (int i = 0; i < indent; ++i) std::cout << "  ";
-}
+class ExprNode : public ASTNode {};
+class StmtNode : public ASTNode {};
 
-class NumberNode : public ASTNode {
+class BlockNode : public StmtNode {
 public:
-    int value;
-    NumberNode(int value) : value(value) {}
-    void print(int indent = 0) const override { printIndent(indent); std::cout << "Number: " << value << "\n"; }
-};
-
-class BoolNode : public ASTNode {
-public:
-    bool value;
-    BoolNode(bool value) : value(value) {}
-    void print(int indent = 0) const override { printIndent(indent); std::cout << "Bool: " << (value ? "সত্য" : "মিথ্যা") << "\n"; }
-};
-
-class StringNode : public ASTNode {
-public:
-    std::string value;
-    StringNode(std::string value) : value(value) {}
-    void print(int indent = 0) const override { printIndent(indent); std::cout << "String: " << value << "\n"; }
-};
-
-class VarNode : public ASTNode {
-public:
-    std::string name;
-    VarNode(std::string name) : name(name) {}
-    void print(int indent = 0) const override { printIndent(indent); std::cout << "Var: " << name << "\n"; }
-};
-
-class BinOpNode : public ASTNode {
-public:
-    ASTNode* left;
-    std::string op;
-    ASTNode* right;
-    BinOpNode(ASTNode* left, std::string op, ASTNode* right) : left(left), op(op), right(right) {}
-    void print(int indent = 0) const override {
-        printIndent(indent); std::cout << "BinOp (" << op << ")\n";
-        left->print(indent + 1);
-        right->print(indent + 1);
-    }
-};
-
-class UnaryOpNode : public ASTNode {
-public:
-    std::string op;
-    ASTNode* expr;
-    UnaryOpNode(std::string op, ASTNode* expr) : op(op), expr(expr) {}
-    void print(int indent = 0) const override {
-        printIndent(indent); std::cout << "UnaryOp (" << op << ")\n";
-        expr->print(indent + 1);
-    }
-};
-
-class AssignNode : public ASTNode {
-public:
-    VarType type;
-    std::string name;
-    ASTNode* expr;
-    AssignNode(VarType type, std::string name, ASTNode* expr) : type(type), name(name), expr(expr) {}
-    void print(int indent = 0) const override {
-        printIndent(indent); std::cout << "Assign (" << name << ")\n";
-        expr->print(indent + 1);
-    }
-};
-
-class PrintNode : public ASTNode {
-public:
-    ASTNode* expr;
-    PrintNode(ASTNode* expr) : expr(expr) {}
-    void print(int indent = 0) const override {
-        printIndent(indent); std::cout << "Print\n";
-        expr->print(indent + 1);
-    }
-};
-
-class IfNode : public ASTNode {
-public:
-    ASTNode* condition;
-    std::vector<ASTNode*> thenBody;
-    std::vector<ASTNode*> elseBody;
-    IfNode(ASTNode* condition, std::vector<ASTNode*> thenBody, std::vector<ASTNode*> elseBody = {})
-        : condition(condition), thenBody(thenBody), elseBody(elseBody) {}
-    void print(int indent = 0) const override {
-        printIndent(indent); std::cout << "If\n";
-        condition->print(indent + 1);
-        printIndent(indent); std::cout << "Then:\n";
-        for (auto stmt : thenBody) stmt->print(indent + 1);
-        if (!elseBody.empty()) {
-            printIndent(indent); std::cout << "Else:\n";
-            for (auto stmt : elseBody) stmt->print(indent + 1);
+    std::vector<std::unique_ptr<StmtNode>> statements;
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "Block\n";
+        prefix += (isLast ? "    " : "│   ");
+        for (size_t i = 0; i < statements.size(); ++i) {
+            statements[i]->print(prefix, i == statements.size() - 1);
         }
     }
 };
 
-class WhileNode : public ASTNode {
+class NumberNode : public ExprNode {
 public:
-    ASTNode* condition;
-    std::vector<ASTNode*> body;
-    WhileNode(ASTNode* condition, std::vector<ASTNode*> body) : condition(condition), body(body) {}
-    void print(int indent = 0) const override {
-        printIndent(indent); std::cout << "While\n";
-        condition->print(indent + 1);
-        printIndent(indent); std::cout << "Body:\n";
-        for (auto stmt : body) stmt->print(indent + 1);
+    int value;
+    NumberNode(int v) : value(v) {}
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "Number: " << value << "\n";
+    }
+};
+
+class StringNode : public ExprNode {
+public:
+    std::string value;
+    StringNode(std::string v) : value(v) {}
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "String: \"" << value << "\"\n";
+    }
+};
+
+class IdentifierNode : public ExprNode {
+public:
+    std::string name;
+    IdentifierNode(std::string n) : name(n) {}
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "Var: " << name << "\n";
+    }
+};
+
+class BinaryOpNode : public ExprNode {
+public:
+    std::unique_ptr<ExprNode> left;
+    std::string op;
+    std::unique_ptr<ExprNode> right;
+    BinaryOpNode(std::unique_ptr<ExprNode> l, std::string o, std::unique_ptr<ExprNode> r) 
+        : left(std::move(l)), op(o), right(std::move(r)) {}
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "BinOp (" << op << ")\n";
+        prefix += (isLast ? "    " : "│   ");
+        left->print(prefix, false);
+        right->print(prefix, true);
+    }
+};
+
+class VarDeclNode : public StmtNode {
+public:
+    std::string type;
+    std::string name;
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "Declaration\n";
+        prefix += (isLast ? "    " : "│   ");
+        std::cout << prefix << "├── Keyword: " << type << "\n";
+        std::cout << prefix << "└── Identifier: " << name << "\n";
+    }
+};
+
+class AssignNode : public StmtNode {
+public:
+    std::string name;
+    std::unique_ptr<ExprNode> expr;
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "Assign (" << name << ")\n";
+        prefix += (isLast ? "    " : "│   ");
+        expr->print(prefix, true);
+    }
+};
+
+class PrintNode : public StmtNode {
+public:
+    std::unique_ptr<ExprNode> expr;
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "Print\n";
+        prefix += (isLast ? "    " : "│   ");
+        expr->print(prefix, true);
+    }
+};
+
+class IfNode : public StmtNode {
+public:
+    std::unique_ptr<ExprNode> condition;
+    std::unique_ptr<BlockNode> thenBranch;
+    std::unique_ptr<BlockNode> elseBranch;
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "If\n";
+        std::string newPrefix = prefix + (isLast ? "    " : "│   ");
+        condition->print(newPrefix, false);
+        std::cout << newPrefix << "├── Then:\n";
+        thenBranch->print(newPrefix + "│   ", elseBranch == nullptr);
+        if (elseBranch) {
+            std::cout << newPrefix << "└── Else:\n";
+            elseBranch->print(newPrefix + "    ", true);
+        }
+    }
+};
+
+class WhileNode : public StmtNode {
+public:
+    std::unique_ptr<ExprNode> condition;
+    std::unique_ptr<BlockNode> body;
+    void print(std::string prefix = "", bool isLast = true) const override {
+        std::cout << prefix << (isLast ? "└── " : "├── ") << "While\n";
+        std::string newPrefix = prefix + (isLast ? "    " : "│   ");
+        condition->print(newPrefix, false);
+        std::cout << newPrefix << "└── Body:\n";
+        body->print(newPrefix + "    ", true);
     }
 };
 #endif
