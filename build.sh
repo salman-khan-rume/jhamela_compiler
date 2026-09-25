@@ -16,7 +16,7 @@ echo "Compiling JHAMELA Compiler..."
 g++ -std=c++17 -Wall -Wextra \
     lexer.cpp \
     parser.cpp \
-    main_updated.cpp \
+    main.cpp \
     -o jhamela
 
 if [ $? -ne 0 ]; then
