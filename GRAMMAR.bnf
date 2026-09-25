@@ -1,0 +1,112 @@
+(* ============================================================
+   JHAMELA Programming Language — Formal Grammar (BNF)
+   CSE-4114: Compiler Design and Construction Sessional
+   ------------------------------------------------------------
+   Notation:
+     ::=   is defined as
+     |     alternative
+     { }    zero or more repetitions
+     [ ]    optional (zero or one)
+     " "    terminal symbol (literal Bengali token)
+     (* *)  comment
+   ============================================================ *)
+
+
+(* ---------- 1. Program ---------- *)
+
+<program>           ::= <statement-list>
+<statement-list>    ::= { <statement> }
+
+
+(* ---------- 2. Statements ---------- *)
+
+<statement>         ::= <declaration>
+                      | <assignment>
+                      | <print-statement>
+                      | <if-statement>
+                      | <while-statement>
+                      | <block>
+
+
+(* ---------- 3. Declarations ---------- *)
+
+<declaration>       ::= "ধরো" <type> <identifier> ";"
+<type>              ::= "পূর্ণসংখ্যা"      (* integer *)
+                      | "সত্যমূল্য"        (* boolean *)
+                      | "টেক্সট"           (* string  *)
+
+
+(* ---------- 4. Assignment ---------- *)
+
+<assignment>        ::= "রাখো" <identifier> "=" <expression> ";"
+
+
+(* ---------- 5. Print ---------- *)
+
+<print-statement>   ::= "দেখাও" <expression> ";"
+
+
+(* ---------- 6. Conditionals ---------- *)
+
+<if-statement>      ::= "যদি" <expression> <block>
+                        [ "নাহলে" <block> ]
+
+
+(* ---------- 7. Loops ---------- *)
+
+<while-statement>   ::= "যতক্ষণ" <expression> <block>
+
+
+(* ---------- 8. Blocks ---------- *)
+
+<block>             ::= "{" <statement-list> "}"
+
+
+(* ---------- 9. Expressions (precedence: low -> high) ---------- *)
+
+<expression>        ::= <comparison>
+
+<comparison>        ::= <additive>
+                        { ( ">"  | "<"  | ">=" | "<=" | "==" | "!=" )
+                          <additive> }
+
+<additive>          ::= <term>
+                        { ( "+"  | "-" ) <term> }
+
+<term>              ::= <unary>
+                        { ( "*"  | "/" ) <unary> }
+
+<unary>             ::= [ "-" ] <primary>
+
+<primary>           ::= <number>
+                      | <string>
+                      | <boolean>
+                      | <identifier>
+                      | "(" <expression> ")"
+
+
+(* ---------- 10. Terminals ---------- *)
+
+<number>            ::= <digit> { <digit> }
+<digit>             ::= "০" | "১" | "২" | "৩" | "৪"
+                      | "৫" | "৬" | "৭" | "৮" | "৯"
+                      | "0" | "1" | "2" | "3" | "4"
+                      | "5" | "6" | "7" | "8" | "9"
+
+<boolean>           ::= "সত্য" | "মিথ্যা"
+
+<string>            ::= '"' { <string-char> } '"'
+<string-char>       ::= (* any UTF-8 character except '"' *)
+
+<identifier>        ::= <letter> { <letter> | <digit> | "_" }
+<letter>            ::= (* any Bengali or Latin letter, or "_" *)
+
+
+(* ---------- 11. Comments ---------- *)
+(* The current version does not support comments in the source
+   language. The generated Python output contains comments. *)
+
+
+(* ============================================================
+   END OF GRAMMAR
+   ============================================================ *)
