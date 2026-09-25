@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <stdexcept>
 
 class CodeGenerator {
 private:
@@ -118,11 +119,17 @@ private:
         }
     }
     
+    // FIX: Ensure all expression types handled, no gaps in output
     void generateExpr(ExprNode* expr) {
+        if (expr == nullptr) {
+            throw std::runtime_error("Null expression in code generation");
+        }
+        
         if (auto num = dynamic_cast<NumberNode*>(expr)) {
             code << num->value;
-        } else if (auto str = dynamic_cast<StringNode*>(expr)) {
-            // Escape quotes
+        } 
+        else if (auto str = dynamic_cast<StringNode*>(expr)) {
+            // Escape quotes properly
             std::string escaped = str->value;
             size_t pos = 0;
             while ((pos = escaped.find("\"", pos)) != std::string::npos) {
@@ -130,14 +137,21 @@ private:
                 pos += 2;
             }
             code << "\"" << escaped << "\"";
-        } else if (auto id = dynamic_cast<IdentifierNode*>(expr)) {
+        } 
+        else if (auto id = dynamic_cast<IdentifierNode*>(expr)) {
             code << id->name;
-        } else if (auto binOp = dynamic_cast<BinaryOpNode*>(expr)) {
+        } 
+        else if (auto binOp = dynamic_cast<BinaryOpNode*>(expr)) {
+            // FIX: Wrap in parentheses to ensure proper precedence
             code << "(";
             generateExpr(binOp->left.get());
             code << " " << binOp->op << " ";
             generateExpr(binOp->right.get());
             code << ")";
+        } 
+        else {
+            // FIX: Catch unhandled expression types
+            throw std::runtime_error("Unknown expression type in code generation");
         }
     }
 };

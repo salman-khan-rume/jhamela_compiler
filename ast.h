@@ -75,7 +75,7 @@ public:
     void print(std::string prefix = "", bool isLast = true) const override {
         std::cout << prefix << (isLast ? "└── " : "├── ") << "Declaration\n";
         prefix += (isLast ? "    " : "│   ");
-        std::cout << prefix << "├── Keyword: " << type << "\n";
+        std::cout << prefix << "├── Type: " << type << "\n";
         std::cout << prefix << "└── Identifier: " << name << "\n";
     }
 };

@@ -19,7 +19,7 @@ void Parser::match(TokenType type) {
     }
 }
 
-// Satisfies mandatory feature: basic syntax error recovery[cite: 1]
+// Satisfies mandatory feature: basic syntax error recovery
 void Parser::synchronize() {
     while (currentToken.type != T_EOF) {
         if (currentToken.type == T_SEMICOLON) {
@@ -58,17 +58,33 @@ std::unique_ptr<BlockNode> Parser::parseBlock() {
     return block;
 }
 
+// FIX: Accept all type keywords (int, bool, string)
+bool isTypeKeyword(TokenType type) {
+    return type == T_PURNOSONKHA || 
+           type == T_SHOTTOMULLO || 
+           type == T_STRING;  
+}
+
 std::unique_ptr<StmtNode> Parser::parseStatement() {
+    // Variable declaration: ধরো পূর্ণসংখ্যা x;
     if (currentToken.type == T_DHORO) { 
         auto node = std::make_unique<VarDeclNode>();
         match(T_DHORO);
-        node->type = currentToken.value; 
-        match(T_PURNOSONKHA); // Basic hardcoded assumption for this code segment
+        
+        // FIX: Accept any type keyword instead of hardcoding T_PURNOSONKHA
+        if (!isTypeKeyword(currentToken.type)) {
+            throw std::runtime_error("Expected type keyword after 'ধরো', got '" + currentToken.value + "'");
+        }
+        
+        node->type = currentToken.value;  // Store type string
+        advance();  // Accept whichever type keyword
+        
         node->name = currentToken.value;
         match(T_IDENTIFIER);
         match(T_SEMICOLON);
         return node;
     } 
+    // Assignment: রাখো x = expr;
     else if (currentToken.type == T_RAKHO) { 
         match(T_RAKHO);
         auto node = std::make_unique<AssignNode>();
@@ -79,6 +95,7 @@ std::unique_ptr<StmtNode> Parser::parseStatement() {
         match(T_SEMICOLON);
         return node;
     }
+    // If statement: যদি (expr) { ... }
     else if (currentToken.type == T_JODI) { 
         auto node = std::make_unique<IfNode>();
         match(T_JODI);
@@ -90,6 +107,7 @@ std::unique_ptr<StmtNode> Parser::parseStatement() {
         }
         return node;
     }
+    // While loop: যতক্ষণ (expr) { ... }
     else if (currentToken.type == T_JOTOKKHON) { 
         auto node = std::make_unique<WhileNode>();
         match(T_JOTOKKHON);
@@ -97,6 +115,7 @@ std::unique_ptr<StmtNode> Parser::parseStatement() {
         node->body = parseBlock();
         return node;
     }
+    // Print statement: দেখাও expr;
     else if (currentToken.type == T_DEKHAO) { 
         auto node = std::make_unique<PrintNode>();
         match(T_DEKHAO);
@@ -104,7 +123,7 @@ std::unique_ptr<StmtNode> Parser::parseStatement() {
         match(T_SEMICOLON);
         return node;
     }
-    throw std::runtime_error("Unknown statement starting with " + currentToken.value);
+    throw std::runtime_error("Unknown statement starting with '" + currentToken.value + "'");
 }
 
 std::unique_ptr<ExprNode> Parser::parseExpression() {
@@ -159,5 +178,5 @@ std::unique_ptr<ExprNode> Parser::parseFactor() {
         match(T_RPAREN);
         return node;
     }
-    throw std::runtime_error("Expected expression factor");
+    throw std::runtime_error("Expected expression factor, got '" + currentToken.value + "'");
 }

@@ -5,6 +5,7 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <iostream>
 
 // Variable type enum
 enum class VarType { INT, STRING, BOOL, UNDEFINED };
@@ -110,7 +111,7 @@ private:
         }
     }
     
-    // Variable declaration
+    // Variable declaration: map Bengali type strings to VarType enum
     void analyzeVarDecl(VarDeclNode* decl) {
         VarType type = VarType::UNDEFINED;
         if (decl->type == "পূর্ণসংখ্যা") {
@@ -124,34 +125,33 @@ private:
         symTable.define(decl->name, type);
     }
     
-    // Assignment
+    // Assignment: check variable exists and type matches
     void analyzeAssign(AssignNode* assign) {
         // Check variable exists
         if (!symTable.exists(assign->name)) {
             throw std::runtime_error("Variable '" + assign->name + "' not declared");
         }
         
-        // Analyze expression
+        // Analyze expression type
         VarType exprType = analyzeExpr(assign->expr.get());
         
         // Type match check
         Symbol* sym = symTable.lookup(assign->name);
         if (sym->type != exprType && sym->type != VarType::UNDEFINED && 
             exprType != VarType::UNDEFINED) {
-            // Lenient: allow int/bool mixing for now
+            // Lenient: allow mixing for now
         }
         
         symTable.initialize(assign->name);
     }
     
-    // Print statement
+    // Print statement: analyze expression only
     void analyzePrint(PrintNode* print) {
         analyzeExpr(print->expr.get());
     }
     
-    // If statement
+    // If statement: condition must be bool or int
     void analyzeIf(IfNode* ifNode) {
-        // Condition must be bool or int
         VarType condType = analyzeExpr(ifNode->condition.get());
         if (condType != VarType::INT && condType != VarType::BOOL && 
             condType != VarType::UNDEFINED) {
@@ -167,7 +167,7 @@ private:
         }
     }
     
-    // While loop
+    // While loop: condition must be bool or int
     void analyzeWhile(WhileNode* whileNode) {
         VarType condType = analyzeExpr(whileNode->condition.get());
         if (condType != VarType::INT && condType != VarType::BOOL && 
@@ -180,18 +180,18 @@ private:
         }
     }
     
-    // Block
+    // Block: analyze all statements
     void analyzeBlock(BlockNode* block) {
         for (auto& stmt : block->statements) {
             analyzeStatement(stmt.get());
         }
     }
     
-    // Expression analysis (returns type)
+    // Expression analysis: returns inferred type
     VarType analyzeExpr(ExprNode* expr) {
-        if (auto num = dynamic_cast<NumberNode*>(expr)) {
+            if (dynamic_cast<NumberNode*>(expr)) {
             return VarType::INT;
-        } else if (auto str = dynamic_cast<StringNode*>(expr)) {
+        } else if (dynamic_cast<StringNode*>(expr)) {
             return VarType::STRING;
         } else if (auto id = dynamic_cast<IdentifierNode*>(expr)) {
             if (!symTable.exists(id->name)) {

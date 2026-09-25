@@ -273,8 +273,10 @@ class JhamelaCompilerGUI:
         try:
             result = subprocess.run(
                 [self.compiler_path, self.temp_input_file],
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,    
                 text=True,
+                encoding='utf-8',
                 timeout=5
             )
             
@@ -351,6 +353,7 @@ class JhamelaCompilerGUI:
                 [sys.executable, "output.py"],
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
                 timeout=10
             )
             

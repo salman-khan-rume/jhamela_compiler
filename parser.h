@@ -4,6 +4,7 @@
 #include "ast.h"
 #include <vector>
 #include <stdexcept>
+#include <memory>
 
 class Parser {
 public:
