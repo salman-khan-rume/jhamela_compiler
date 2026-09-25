@@ -4,6 +4,8 @@
 #include <vector>
 #include "lexer.h"
 #include "parser.h"
+#include "semantic.h"
+#include "codegen.h"
 
 std::string formatToken(const Token& t) {
     switch (t.type) {
@@ -38,28 +40,55 @@ int main(int argc, char* argv[]) {
     buffer << file.rdbuf();
     std::string source = buffer.str();
 
-    Lexer lexer(source);
-    std::vector<Token> tokens;
-    
-    // 1. Lexical Analysis
-    Token t = lexer.getNextToken();
-    while (t.type != T_EOF && t.type != T_ERROR) {
-        tokens.push_back(t);
-        t = lexer.getNextToken();
+    try {
+        // ===== LEXICAL ANALYSIS =====
+        Lexer lexer(source);
+        std::vector<Token> tokens;
+        
+        Token t = lexer.getNextToken();
+        while (t.type != T_EOF && t.type != T_ERROR) {
+            tokens.push_back(t);
+            t = lexer.getNextToken();
+        }
+        
+        std::cout << "=== TOKENS ===" << std::endl;
+        std::cout << "Total Tokens: " << tokens.size() << std::endl;
+        for (const auto& tok : tokens) {
+            std::cout << formatToken(tok) << std::endl;
+        }
+        
+        // ===== PARSING & AST GENERATION =====
+        std::cout << "\n=== PARSE TREE ===" << std::endl;
+        Parser parser(tokens);
+        auto ast = parser.parseProgram();
+        ast->print();
+        
+        // ===== SEMANTIC ANALYSIS =====
+        std::cout << "\n=== SEMANTIC ANALYSIS ===" << std::endl;
+        SemanticAnalyzer semanticAnalyzer;
+        semanticAnalyzer.analyze(ast.get());
+        std::cout << "✓ Semantic analysis passed" << std::endl;
+        semanticAnalyzer.getSymbolTable().printSymbols();
+        
+        // ===== CODE GENERATION =====
+        std::cout << "\n=== CODE GENERATION ===" << std::endl;
+        CodeGenerator codegen;
+        std::string pythonCode = codegen.generate(ast.get());
+        
+        // Write to output file
+        std::ofstream outFile("output.py");
+        outFile << pythonCode;
+        outFile.close();
+        
+        std::cout << "✓ Generated Python code (output.py):\n" << std::endl;
+        std::cout << pythonCode << std::endl;
+        
+        std::cout << "\n=== COMPILATION SUCCESSFUL ===" << std::endl;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "\n✗ COMPILATION ERROR: " << e.what() << std::endl;
+        return 1;
     }
-    
-    // 2. Token Console Output
-    std::cout << "=== TOKENS ===" << std::endl;
-    std::cout << "Total Tokens: " << tokens.size() << std::endl;
-    for (const auto& tok : tokens) {
-        std::cout << formatToken(tok) << std::endl;
-    }
-    
-    // 3. Parsing & Tree Generation
-    std::cout << "\n=== PARSE TREE ===" << std::endl;
-    Parser parser(tokens);
-    auto ast = parser.parseProgram();
-    ast->print();
 
     return 0;
 }
