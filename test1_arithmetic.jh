@@ -1,0 +1,12 @@
+ধরো পূর্ণসংখ্যা ক;
+ধরো পূর্ণসংখ্যা খ;
+
+রাখো ক = ১০;
+রাখো খ = ৩;
+
+দেখাও ক + খ;       // Output: 13
+দেখাও ক - খ;       // Output: 7
+দেখাও ক * খ;       // Output: 30
+দেখাও ক / খ;       // Output: 3 (Python integer division)
+দেখাও ক + খ * ২;   // Output: 16 (Precedence test)
+দেখাও (ক + খ) * ২; // Output: 26 (Parentheses test)
