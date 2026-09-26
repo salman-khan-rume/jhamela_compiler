@@ -3,6 +3,7 @@ REM Build script for JHAMELA Compiler on Windows
 
 echo ========================================
 echo   JHAMELA Compiler Build Script
+echo   by Salman Khan Rume and Akash Das
 echo ========================================
 
 where g++ >nul 2>nul
